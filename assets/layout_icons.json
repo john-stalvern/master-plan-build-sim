@@ -1,0 +1,98 @@
+{
+  "group": "icons",
+  "strips": [
+    {
+      "file": "assets/tools.png",
+      "size": "176x16",
+      "cells": [
+        {
+          "name": "BULLDOZE",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "name": "ROAD",
+          "x": 16,
+          "y": 0
+        },
+        {
+          "name": "RES",
+          "x": 32,
+          "y": 0
+        },
+        {
+          "name": "COM",
+          "x": 48,
+          "y": 0
+        },
+        {
+          "name": "IND",
+          "x": 64,
+          "y": 0
+        },
+        {
+          "name": "PARK",
+          "x": 80,
+          "y": 0
+        },
+        {
+          "name": "SCHOOL",
+          "x": 96,
+          "y": 0
+        },
+        {
+          "name": "POLICE",
+          "x": 112,
+          "y": 0
+        },
+        {
+          "name": "FIRE",
+          "x": 128,
+          "y": 0
+        },
+        {
+          "name": "POWERPLANT",
+          "x": 144,
+          "y": 0
+        },
+        {
+          "name": "POWERLINE",
+          "x": 160,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "file": "assets/metrics.png",
+      "size": "80x16",
+      "cells": [
+        {
+          "name": "WALKABILITY",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "name": "GREEN",
+          "x": 16,
+          "y": 0
+        },
+        {
+          "name": "AMENITIES",
+          "x": 32,
+          "y": 0
+        },
+        {
+          "name": "YIELD",
+          "x": 48,
+          "y": 0
+        },
+        {
+          "name": "LIVABILITY",
+          "x": 64,
+          "y": 0
+        }
+      ]
+    }
+  ],
+  "notes": "A1 tools: pal_tool[] order, 11 x 16x16 swatches on one row. A2 metrics: transparent interior, #E8E8E8 line art plus one contract accent per icon. Build with assets/build_icons.py."
+}
