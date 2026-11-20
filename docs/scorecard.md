@@ -8,8 +8,11 @@ CONTRACT phrase was ambiguous, the resolution is marked **Decision** and keeps
 the default's intent. T2 (sim engineer) implements this file verbatim; T3 (GUI)
 renders the five ints 0..100 as labelled bars.
 
-Research references [R2]..[R7] point at the numbered reference list in
-docs/research.md §2; [R§3] is research.md §3 (the developer-audience brief).
+Citations below refer to docs/research.md: "§N" is a section of that doc;
+"[manual]" is its first §2 reference (the SimCity manual scan,
+users.ox.ac.uk/~uzdm0006/scans/sim/manual.html); "[engine]" is the §2
+reference "Detailed engine findings" (jeffquast.com/post/a-perfect-simcity/);
+"[micropolis]" is the §2 reference implementation github.com/SimHacker/micropolis.
 
 ---
 
@@ -18,25 +21,31 @@ docs/research.md §2; [R§3] is research.md §3 (the developer-audience brief).
 - Grid: `world[GRID_H][GRID_W]`, GRID_W = GRID_H = 40. Coordinates (x, y):
   x = column 0..39, y = row 0..39. Tile access `world[y][x]`.
 - **Developed residential tile**: `type == T_RES && level >= 1`.
-  Level 0 means "zoned but undeveloped" (research.md §5 data model) and counts
-  for nothing except the yield denominator question — it does not; yield uses
-  achieved levels only.
+  Level 0 means "zoned but undeveloped" (research.md §5 data model). Level-0
+  zones contribute 0 to yield's level-sum L but DO count in its zone count Z
+  (§2.4); they count for nothing else.
 - **Zone tile**: type in {T_RES, T_COM, T_IND}. Level range 0..3 (CONTRACT).
 - **Green tile**: `type == T_PARK || type == T_WATER ||
-  (type == T_EMPTY && world_trees[y][x] == 1)`. Trees live in the parallel
+  (type == T_EMPTY && world_trees[y][x] != 0)`. Trees live in the parallel
   `world_trees` array (world.h additive note); `Tile.level` on T_EMPTY is NOT
   decoration and must not be read as such.
-- **Amenity tile**: type in {T_COM, T_PARK, T_SCHOOL, T_POLICE, T_FIRE}.
-  Services count at any level — a placed school serves the neighbourhood the
-  day it is built, which matches the sandbox's "instantly visible consequences"
-  goal [R§3].
+- **Service/amenity placement rule**: services (T_SCHOOL, T_POLICE, T_FIRE,
+  T_PARK, and shops T_COM) count at any level, including level 0 — a placed
+  school serves the neighbourhood the day it is built, which matches the
+  sandbox's "instantly visible consequences" goal [§3]. Which types each
+  metric actually uses is stated per metric: walkability uses COM/PARK/SCHOOL
+  (§2.1); amenities uses SCHOOL/COM (§2.3). POLICE and FIRE have no direct
+  scorecard term in v1 — police act upstream via crime → land value (CONTRACT
+  tick order); fire stations are safety infrastructure with no v1 metric.
 - **Distance**: Chebyshev. `cheb(a, b) = max(abs(ax-bx), abs(ay-by))`.
   "Within radius r" means `cheb <= r`, inclusive. Rationale: on a square tile
   grid with no diagonal streets modelled, the Chebyshev ball is the honest
   walking catchment; SimCity's own service radii are circular areas on the same
-  square grid [R2, mechanics 6], and radius-4/5 balls are our 5-minute and
+  square grid [§2 mechanics item 6], and radius-4/5 balls are our 5-minute and
   ~6-minute walk proxies (see §2.1).
-- **Arithmetic**: all sums in `int` (worst case 1600 tiles x 3 = 4800, safe).
+- **Arithmetic**: all sums in `int`. Largest possible sum: pollution over all
+  1600 tiles at 255 = 408,000; percentages at most 100*1600 = 160,000 — all
+  int-safe, no overflow.
   Every percentage is computed as `pct(n, d) = d > 0 ? (100 * n) / d : 0`
   — integer division, truncation toward zero, no floating point anywhere.
 - **Clamping**: every metric ends with `clamp(v) = v < 0 ? 0 : (v > 100 ? 100 : v)`.
@@ -46,8 +55,9 @@ docs/research.md §2; [R§3] is research.md §3 (the developer-audience brief).
   every field well-defined on a fresh map, so `--smoke` JSON is always sane.
 - Metrics are recomputed at the end of every `sim_tick()`, after growth/decay
   (CONTRACT tick order), and reflect the grid state at that instant.
-  `sim_scorecard()` returns the latest values plus population/jobs/day from
-  the world API. Metrics never mutate the world.
+  `sim_scorecard()` returns the latest values plus population/jobs from the
+  world API (`world_population()`, `world_jobs()`) and day from the sim's own
+  tick counter. Metrics never mutate the world.
 
 ---
 
@@ -70,7 +80,7 @@ distance of shops + amenities"). It deliberately accepts ANY of shop/park/
 school, not all three: mixed-use proximity is the walkability signal; requiring
 all three is the stricter amenity metric (§2.3). This mirrors SimCity's
 desirability model where nearby commerce and parks raise residential value
-[R2, mechanics 4; R3 growth gates].
+[§2 mechanics items 3–4; micropolis].
 
 Implementation note: one pass over developed RES tiles, scanning the 9x9
 window clipped to the grid; early-exit on first match. O(N * 81) worst case,
@@ -88,17 +98,21 @@ itself; COM/PARK/SCHOOL count regardless of their level or powered state.
 
 CONTRACT default, unchanged. Rationale: developers and planners read green
 coverage as a site-wide ratio (open-space standards are expressed as % of site
-area); SimCity's land-value model rewards parks and water terrain [R2,
-mechanics 4], and research.md §3 lists "Green & open space coverage (% of
+area); SimCity's land-value model rewards parks and water terrain [§2
+mechanics item 4], and research.md §3 lists "Green & open space coverage (% of
 tiles)" verbatim. Existing trees count: clearing forest for a subdivision
 visibly costs green score, which is exactly the trade-off the tool should
-surface [R§3 comparison of alternative layouts].
+surface [§3 comparison of alternative layouts].
 
 Baseline (regression anchor): on a fresh `world_init()` map the deterministic
 terrain yields green = **21** (verified by compiling world.c and counting:
 157 water tiles + 190 forest tiles = 347 green of 1600; 100*347/1600 = 21).
 Any implementation reporting a different fresh-map green value has a bug in
-terrain generation or in this metric.
+terrain generation or in this metric. NOTE: this anchor is measured on the
+project's **-O2** build (the Makefile flag). world.c's terrain hash currently
+uses signed-int multiplication that overflows (UB), so a -O0 build places trees
+differently and yields green = 26; that is a world.c determinism bug (T1), not
+a scorecard bug — the metric formula above is build-independent.
 
 Edge cases: T_EMPTY without trees is NOT green (it is developable land);
 T_ROAD/T_POWERLINE etc. are never green even if a tree flag were stale —
@@ -122,8 +136,9 @@ both), not as two independent percentages averaged. Rationale: the metric is
 "amenity coverage" for residents — a home with a school but no shops is not
 covered. This is the family-neighbourhood test from research.md §3 ("schools,
 parks, retail, services within a radius"): school + daily retail is the minimum
-credible pair. Parks/police/fire already enter walkability (§2.1) and land
-value (CONTRACT tick order), so they are not double-counted here.
+credible pair. Parks already enter walkability (§2.1); police suppress crime
+and thus land value upstream (CONTRACT tick order); fire stations have no v1
+scorecard effect (§1) — none of them is double-counted here.
 
 Implementation note: same 11x11 window scan as walkability (121 tiles), track
 two booleans (saw_school, saw_com), early-exit when both true.
@@ -132,7 +147,7 @@ Edge cases: one school may satisfy many homes (no capacity model in v1 —
 research.md §4 keeps the sim local/neighbour-based); services count at any
 level; COM must be type T_COM (a zoned-but-undeveloped COM still counts as a
 future shop location — **Decision:** type-based, level-independent, consistent
-with §1 amenity rule and with walkability).
+with the §1 service placement rule and with walkability).
 
 ### 2.4 yield — how much of the plan's development potential is built
 
@@ -151,7 +166,7 @@ all zoned tiles. Rationale: this is the developer's absorption question —
 honest signal about plan quality rather than a reward for hoarding empty
 zones. It is the density/yield metric of research.md §3 ("developable floor
 area hint — the developer's bottom line") and echoes the manual's
-balance rule of thumb R ≈ C + I [R2 manual; R§3]: a plan that zones only
+balance rule of thumb R ≈ C + I [manual; §3]: a plan that zones only
 housing with no jobs floor area still shows its imbalance through jobs vs
 population in the HUD.
 
@@ -176,8 +191,8 @@ CONTRACT default: "mean of the four, minus pollution penalty".
 residents / 2). Rationale:
 
 - Pollution is the one externality the four positive metrics do not capture;
-  SimCity's desirability subtracts pollution from land value [R2, mechanics 4,
-  5; R4 engine findings], and research.md §3's liveability candidate is
+  SimCity's desirability subtracts pollution from land value [§2 mechanics
+  items 4–5; engine], and research.md §3's liveability candidate is
   "land value − pollution − crime blended". Crime already suppresses growth
   and land value upstream (CONTRACT tick order), so subtracting it again here
   would double-count; pollution reaches residents directly and is not otherwise
@@ -185,7 +200,7 @@ residents / 2). Rationale:
 - Scaling by 1/2 keeps livability usable: `Tile.pollution` is uint8 (0..255);
   a heavily polluted home (pollution ≈ 100) costs 50 points, which is severe
   but recoverable by moving industry downwind / adding park buffers — the
-  comparison behaviour the tool exists for [R§3]. An unscaled mean would pin
+  comparison behaviour the tool exists for [§3]. An unscaled mean would pin
   livability at 0 for any plan with industry, hiding all other signal.
 - Mean over developed RES only: pollution on empty land or industry tiles
   harms nobody yet; the index measures lived experience.
@@ -243,8 +258,10 @@ T2 may structure the code differently but must produce identical integers.
     int penalty = n > 0 ? poll_sum / (2*n) : 0;
     sc.livability  = clamp100(base - penalty);
 
-Complexity: O(1600 * 121) worst case per tick ≈ 194k tile reads — fine at one
-tick per 500 ms. No allocation, no floats, deterministic.
+Complexity: each developed RES triggers up to three radius-4 scans (81 tiles)
+and two radius-5 scans (121 tiles): <= 1600 * (3*81 + 2*121) ≈ 776k tile reads
+per tick worst case, far less with early-exit — trivial at one tick per 500 ms.
+No allocation, no floats, deterministic.
 
 ## 4. Sanity anchors for tests (T2) and QA
 
