@@ -133,3 +133,50 @@ Feature ownership: mp-architect owns the world.h enum addition, sim.c
 treatment, tests (tests/test_sim.c additions) and this addendum; mp-gui owns
 main.c input, render.c and the atlas/layout doc update. Neither edits the
 other's files.
+
+## Sprite atlas (v1.1, optional) — PM-approved GUI integration
+
+Extends v1/v1.2; nothing above is changed. Owner: mp-gui (render.c, this
+addendum and the vendored `third_party/stb_image.h` only). PNGs are decoded
+with stb_image (public domain, v2.34); SDL2_image is NOT installed and the
+frozen Makefile is NOT modified (HDR/linear stb paths are compiled out so no
+`-lm` is needed).
+
+1. **Tiles.** `render_init()` attempts to load `assets/tiles.png` if present.
+   Layout is documented in `assets/README.md`: 112x48, 21 cells of 16x16 in a
+   7-column x 3-row row-major grid (a 22-cell 112x64 extension adds
+   `T_PICKLEBALL` at cell 21). Cell selection: non-zone types use their
+   same-named sprite; `T_RES`/`T_COM`/`T_IND` use the base sprite at level 0
+   and `T_<TYPE>_L1/_L2/_L3` at levels 1..3. When a usable atlas is loaded,
+   sprites replace the flat `fill_rect` tiles in the no-overlay view and also
+   supply tree/level detail; `T_PICKLEBALL` uses its flat court drawing when
+   cell 21 is absent.
+2. **Overlays keep the computed tint path.** The four overlays still recolour
+   every tile with `overlay_color()` in the normal view. The A4 `heat.png`
+   alpha cells are deliberately NOT substituted: they are five quantised
+   60%-alpha swatches over the tile, not visually equivalent to the existing
+   continuous per-tile interpolation, so computed tints remain authoritative.
+3. **Batch A UI art (manifest A1-A6), all optional.** Layouts are in
+   `assets/README.md` and `assets/layout_*.json`.
+   - A1 `tools.png` (176x16, 11 cells): replaces the colour swatch on each of
+     the 11 sidebar tool buttons, cell order = `pal_tool[]`.
+   - A2 `metrics.png` (80x16, 5 cells): a 16x16 icon to the right of each
+     scorecard bar (x=886), cells WALKABILITY/GREEN/AMENITIES/YIELD/LIVABILITY.
+   - A3 ramp PNGs (180x10 each), `legend_glyphs.png` and `legend_tags.png`
+     (64x16, 4 cells): the active ramp/glyph/F-tag sit beside the current
+     legend bar; a four-row key (tag + glyph + stepped ramp per mode) replaces
+     the keyboard hint lines when all individual PNGs are present. The
+     composite `legend_keys.png` (212x64) is the fallback key sheet.
+   - A5 `cursors.png` (64x16, HOVER/VALID/INVALID/BULLDOZE) replaces the
+     white/dark double outline; the four `cursor_*.png` singles are the
+     per-file fallback. Marker choice: BULLDOZE tool -> BULLDOZE, an active
+     overlay -> neutral HOVER, otherwise VALID on `T_EMPTY` and INVALID on an
+     occupied tile.
+   - A6 `hud_topbar.png` (920x40) is drawn as the top-bar background; all
+     live text (MASTER PLANNER / DAY / POP / PAUSED) is rendered on top in its
+     safe zones exactly as before.
+4. **Fallback rule.** A missing, unreadable or wrongly-sized PNG disables only
+   that element: its previous flat-rect/text rendering is used, unchanged.
+   Nothing is required for `render_init()` to succeed, and `--smoke` (which
+   never creates a window) is unaffected. Rendering with the art removed is
+   byte-for-byte the v1 appearance, apart from the v1.2 court colour.
