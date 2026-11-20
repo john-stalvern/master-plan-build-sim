@@ -1,0 +1,252 @@
+{
+  "group": "legends",
+  "ramps": [
+    {
+      "mode": "LANDVALUE",
+      "file": "assets/legend_landvalue.png",
+      "size": "180x10",
+      "steps": [
+        "#962828",
+        "#805434",
+        "#6A8140",
+        "#53AE4D",
+        "#3CDC5A"
+      ]
+    },
+    {
+      "mode": "POLLUTION",
+      "file": "assets/legend_pollution.png",
+      "size": "180x10",
+      "steps": [
+        "#32AA46",
+        "#5C8D3F",
+        "#866F38",
+        "#B15130",
+        "#DC3228"
+      ]
+    },
+    {
+      "mode": "POWER",
+      "file": "assets/legend_power.png",
+      "size": "180x10",
+      "steps": [
+        "#503728",
+        "#503728",
+        "#468CFF",
+        "#468CFF",
+        "#468CFF"
+      ]
+    },
+    {
+      "mode": "CRIME",
+      "file": "assets/legend_crime.png",
+      "size": "180x10",
+      "steps": [
+        "#32AA46",
+        "#5C8F42",
+        "#86743D",
+        "#B15838",
+        "#DC3C32"
+      ]
+    }
+  ],
+  "atlases": [
+    {
+      "file": "assets/legend_glyphs.png",
+      "size": "64x16",
+      "cells": [
+        {
+          "name": "LANDVALUE",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "name": "POLLUTION",
+          "x": 16,
+          "y": 0
+        },
+        {
+          "name": "POWER",
+          "x": 32,
+          "y": 0
+        },
+        {
+          "name": "CRIME",
+          "x": 48,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "file": "assets/legend_tags.png",
+      "size": "64x16",
+      "cells": [
+        {
+          "name": "F1",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "name": "F2",
+          "x": 16,
+          "y": 0
+        },
+        {
+          "name": "F3",
+          "x": 32,
+          "y": 0
+        },
+        {
+          "name": "F4",
+          "x": 48,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "file": "assets/heat.png",
+      "size": "80x64",
+      "cells": [
+        {
+          "name": "LANDVALUE_S0",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "name": "LANDVALUE_S1",
+          "x": 16,
+          "y": 0
+        },
+        {
+          "name": "LANDVALUE_S2",
+          "x": 32,
+          "y": 0
+        },
+        {
+          "name": "LANDVALUE_S3",
+          "x": 48,
+          "y": 0
+        },
+        {
+          "name": "LANDVALUE_S4",
+          "x": 64,
+          "y": 0
+        },
+        {
+          "name": "POLLUTION_S0",
+          "x": 0,
+          "y": 16
+        },
+        {
+          "name": "POLLUTION_S1",
+          "x": 16,
+          "y": 16
+        },
+        {
+          "name": "POLLUTION_S2",
+          "x": 32,
+          "y": 16
+        },
+        {
+          "name": "POLLUTION_S3",
+          "x": 48,
+          "y": 16
+        },
+        {
+          "name": "POLLUTION_S4",
+          "x": 64,
+          "y": 16
+        },
+        {
+          "name": "POWER_S0",
+          "x": 0,
+          "y": 32
+        },
+        {
+          "name": "POWER_S1",
+          "x": 16,
+          "y": 32
+        },
+        {
+          "name": "POWER_S2",
+          "x": 32,
+          "y": 32
+        },
+        {
+          "name": "POWER_S3",
+          "x": 48,
+          "y": 32
+        },
+        {
+          "name": "POWER_S4",
+          "x": 64,
+          "y": 32
+        },
+        {
+          "name": "CRIME_S0",
+          "x": 0,
+          "y": 48
+        },
+        {
+          "name": "CRIME_S1",
+          "x": 16,
+          "y": 48
+        },
+        {
+          "name": "CRIME_S2",
+          "x": 32,
+          "y": 48
+        },
+        {
+          "name": "CRIME_S3",
+          "x": 48,
+          "y": 48
+        },
+        {
+          "name": "CRIME_S4",
+          "x": 64,
+          "y": 48
+        }
+      ]
+    },
+    {
+      "file": "assets/legend_keys.png",
+      "size": "212x64",
+      "rows": [
+        {
+          "name": "LANDVALUE",
+          "y": 0,
+          "tag_x": 0,
+          "glyph_x": 16,
+          "ramp_x": 32,
+          "ramp_y": 3
+        },
+        {
+          "name": "POLLUTION",
+          "y": 16,
+          "tag_x": 0,
+          "glyph_x": 16,
+          "ramp_x": 32,
+          "ramp_y": 19
+        },
+        {
+          "name": "POWER",
+          "y": 32,
+          "tag_x": 0,
+          "glyph_x": 16,
+          "ramp_x": 32,
+          "ramp_y": 35
+        },
+        {
+          "name": "CRIME",
+          "y": 48,
+          "tag_x": 0,
+          "glyph_x": 16,
+          "ramp_x": 32,
+          "ramp_y": 51
+        }
+      ]
+    }
+  ],
+  "notes": "Ramp steps sampled at v=i*255//4 for i=0..4 using render.c lerp_color(): t=a+trunc((b-a)*v/255) per channel. POWER is binary: its ramp is OFF,OFF,(left-half OFF / right-half ON),ON,ON with no blended colours; the step-2 hex recorded is the ON half (the colour at sample x=90), and heat cell POWER_S2 uses that same ON colour. Heat cells carry fill and 1px #141414 outline at alpha 153 (60%); no pixel exceeds alpha 153. legend_keys.png is a reference composite; the individual PNGs remain authoritative."
+}
