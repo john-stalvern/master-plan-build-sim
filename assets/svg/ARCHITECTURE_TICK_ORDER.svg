@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="600" viewBox="0 0 1000 600"
+     font-family="DejaVu Sans, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#E8E8E8"/>
+    </marker>
+  </defs>
+
+  <!-- ============ background ============ -->
+  <rect x="0" y="0" width="1000" height="600" fill="#141414"/>
+
+  <!-- ============ header ============ -->
+  <text x="24" y="29" font-size="19" font-weight="bold" fill="#E8E8E8">MASTER PLANNER — ARCHITECTURE &amp; TICK ORDER</text>
+  <text x="24" y="45" font-size="10" fill="#E8E8E8">B6 · grid 40x40 · tile 16 · tick 500 ms · flat contract palette · no gradients / filters</text>
+  <line x1="24" y1="52" x2="976" y2="52" stroke="#6E6E6E" stroke-width="1"/>
+
+  <text x="24" y="69" font-size="11" font-weight="bold" fill="#DCC828">1 / MODULES &amp; DATA FLOW</text>
+
+  <!-- ============ module data flow (drawn behind boxes) ============ -->
+  <line x1="150" y1="100" x2="426" y2="100" stroke="#E8E8E8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="288" y="94" font-size="9" fill="#E8E8E8" text-anchor="middle">user input</text>
+
+  <path d="M 460 122 L 460 138 L 155 138 L 155 156" fill="none" stroke="#E8E8E8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="307" y="133" font-size="9" fill="#E8E8E8" text-anchor="middle">drives sim.tick</text>
+
+  <path d="M 540 122 L 540 138 L 845 138 L 845 156" fill="none" stroke="#E8E8E8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="692" y="133" font-size="9" fill="#E8E8E8" text-anchor="middle">drives render.frame</text>
+
+  <line x1="242" y1="182" x2="413" y2="182" stroke="#E8E8E8" stroke-width="1.5" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+  <text x="327" y="175" font-size="9" fill="#E8E8E8" text-anchor="middle">read / write tiles</text>
+
+  <line x1="587" y1="182" x2="758" y2="182" stroke="#E8E8E8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="672" y="175" font-size="9" fill="#E8E8E8" text-anchor="middle">reads tiles</text>
+
+  <path d="M 155 208 L 155 244 L 845 244 L 845 208" fill="none" stroke="#DCC828" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="500" y="238" font-size="9" fill="#DCC828" text-anchor="middle">scorecard: sim_scorecard() → metrics</text>
+
+  <!-- ============ module boxes ============ -->
+  <rect x="30"  y="78"  width="120" height="44" fill="#141414" stroke="#6E6E6E" stroke-width="1"/>
+  <rect x="30"  y="78"  width="120" height="4"  fill="#6E6E6E"/>
+  <text x="90"  y="101" font-size="13" font-weight="bold" fill="#E8E8E8" text-anchor="middle">user</text>
+  <text x="90"  y="115" font-size="9" fill="#6E6E6E" text-anchor="middle">keys / mouse</text>
+
+  <rect x="430" y="78"  width="140" height="44" fill="#141414" stroke="#DCC828" stroke-width="1"/>
+  <rect x="430" y="78"  width="140" height="4"  fill="#DCC828"/>
+  <text x="500" y="101" font-size="14" font-weight="bold" fill="#E8E8E8" text-anchor="middle">main</text>
+  <text x="500" y="115" font-size="9" fill="#DCC828" text-anchor="middle">loop · input · HUD</text>
+
+  <rect x="70"  y="156" width="170" height="52" fill="#141414" stroke="#E6821E" stroke-width="1"/>
+  <rect x="70"  y="156" width="170" height="4"  fill="#E6821E"/>
+  <text x="155" y="181" font-size="14" font-weight="bold" fill="#E8E8E8" text-anchor="middle">sim</text>
+  <text x="155" y="197" font-size="9" fill="#E6821E" text-anchor="middle">sim_tick · scorecard</text>
+
+  <rect x="415" y="156" width="170" height="52" fill="#141414" stroke="#3CA03C" stroke-width="1"/>
+  <rect x="415" y="156" width="170" height="4"  fill="#3CA03C"/>
+  <text x="500" y="181" font-size="14" font-weight="bold" fill="#E8E8E8" text-anchor="middle">world</text>
+  <text x="500" y="197" font-size="9" fill="#3CA03C" text-anchor="middle">40×40 Tile grid</text>
+
+  <rect x="760" y="156" width="170" height="52" fill="#141414" stroke="#3C64DC" stroke-width="1"/>
+  <rect x="760" y="156" width="170" height="4"  fill="#3C64DC"/>
+  <text x="845" y="181" font-size="14" font-weight="bold" fill="#E8E8E8" text-anchor="middle">render</text>
+  <text x="845" y="197" font-size="9" fill="#3C64DC" text-anchor="middle">flat top-down draw</text>
+
+  <!-- ============ tick pipeline ============ -->
+  <text x="24" y="278" font-size="11" font-weight="bold" fill="#DCC828">2 / TICK PIPELINE — sim_tick() order (serpentine)</text>
+
+  <!-- inter-stage arrows (behind boxes) -->
+  <line x1="310" y1="331" x2="356" y2="331" stroke="#E8E8E8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="640" y1="331" x2="686" y2="331" stroke="#E8E8E8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="830" y1="370" x2="830" y2="394" stroke="#E8E8E8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="690" y1="437" x2="644" y2="437" stroke="#E8E8E8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="360" y1="437" x2="314" y2="437" stroke="#E8E8E8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="878" y="388" font-size="9" fill="#E8E8E8">down</text>
+
+  <!-- stage 1 : power -->
+  <rect x="30"  y="292" width="280" height="78" fill="#141414" stroke="#DCC828" stroke-width="1"/>
+  <rect x="30"  y="292" width="280" height="24" fill="#DCC828"/>
+  <text x="40"  y="309" font-size="13" font-weight="bold" fill="#141414">1</text>
+  <text x="60"  y="309" font-size="12" font-weight="bold" fill="#141414">POWER flood-fill</text>
+  <text x="40"  y="336" font-size="10" fill="#E8E8E8">power from POWERPLANT across POWERLINE</text>
+  <text x="40"  y="353" font-size="10" fill="#E8E8E8">+ adjacent zones (flood-fill)</text>
+
+  <!-- stage 2 : pollution -->
+  <rect x="360" y="292" width="280" height="78" fill="#141414" stroke="#E6821E" stroke-width="1"/>
+  <rect x="360" y="292" width="280" height="24" fill="#E6821E"/>
+  <text x="370" y="309" font-size="13" font-weight="bold" fill="#141414">2</text>
+  <text x="390" y="309" font-size="12" font-weight="bold" fill="#141414">POLLUTION diffusion</text>
+  <text x="370" y="336" font-size="10" fill="#E8E8E8">pollution from IND / ROAD / POWERPLANT</text>
+  <text x="370" y="353" font-size="10" fill="#E8E8E8">distance falloff per tile</text>
+
+  <!-- stage 3 : crime -->
+  <rect x="690" y="292" width="280" height="78" fill="#141414" stroke="#D23228" stroke-width="1"/>
+  <rect x="690" y="292" width="280" height="24" fill="#D23228"/>
+  <text x="700" y="309" font-size="13" font-weight="bold" fill="#141414">3</text>
+  <text x="720" y="309" font-size="12" font-weight="bold" fill="#141414">CRIME</text>
+  <text x="700" y="336" font-size="10" fill="#E8E8E8">crime from low landValue</text>
+  <text x="700" y="353" font-size="10" fill="#E8E8E8">+ distance from POLICE</text>
+
+  <!-- stage 4 : landValue -->
+  <rect x="690" y="398" width="280" height="78" fill="#141414" stroke="#50DC50" stroke-width="1"/>
+  <rect x="690" y="398" width="280" height="24" fill="#50DC50"/>
+  <text x="700" y="415" font-size="13" font-weight="bold" fill="#141414">4</text>
+  <text x="720" y="415" font-size="12" font-weight="bold" fill="#141414">LAND VALUE</text>
+  <text x="700" y="442" font-size="10" fill="#E8E8E8">landValue = downtown bonus + park/water</text>
+  <text x="700" y="459" font-size="10" fill="#E8E8E8">adjacency − pollution − crime</text>
+
+  <!-- stage 5 : growth -->
+  <rect x="360" y="398" width="280" height="78" fill="#141414" stroke="#3CA03C" stroke-width="1"/>
+  <rect x="360" y="398" width="280" height="24" fill="#3CA03C"/>
+  <text x="370" y="415" font-size="13" font-weight="bold" fill="#141414">5</text>
+  <text x="390" y="415" font-size="12" font-weight="bold" fill="#141414">ZONE GROWTH / DECAY</text>
+  <text x="370" y="442" font-size="10" fill="#E8E8E8">growth/decay: road in 8-neighbourhood</text>
+  <text x="370" y="459" font-size="10" fill="#E8E8E8">+ powered + landValue threshold; 0..3</text>
+
+  <!-- stage 6 : scorecard -->
+  <rect x="30"  y="398" width="280" height="78" fill="#141414" stroke="#3C64DC" stroke-width="1"/>
+  <rect x="30"  y="398" width="280" height="24" fill="#3C64DC"/>
+  <text x="40"  y="415" font-size="13" font-weight="bold" fill="#141414">6</text>
+  <text x="60"  y="415" font-size="12" font-weight="bold" fill="#141414">SCORECARD</text>
+  <text x="40"  y="442" font-size="10" fill="#E8E8E8">scorecard: walkability · green · amenities</text>
+  <text x="40"  y="459" font-size="10" fill="#E8E8E8">· yield · livability + pop/jobs/day</text>
+
+  <!-- ============ legend ============ -->
+  <text x="24" y="498" font-size="10" font-weight="bold" fill="#DCC828">LEGEND / STAGE ACCENTS</text>
+  <rect x="24"  y="506" width="12" height="12" fill="#DCC828"/><text x="41"  y="516" font-size="9" fill="#E8E8E8">power</text>
+  <rect x="129" y="506" width="12" height="12" fill="#E6821E"/><text x="146" y="516" font-size="9" fill="#E8E8E8">pollution</text>
+  <rect x="234" y="506" width="12" height="12" fill="#D23228"/><text x="251" y="516" font-size="9" fill="#E8E8E8">crime</text>
+  <rect x="339" y="506" width="12" height="12" fill="#50DC50"/><text x="356" y="516" font-size="9" fill="#E8E8E8">land value</text>
+  <rect x="444" y="506" width="12" height="12" fill="#3CA03C"/><text x="461" y="516" font-size="9" fill="#E8E8E8">growth</text>
+  <rect x="549" y="506" width="12" height="12" fill="#3C64DC"/><text x="566" y="516" font-size="9" fill="#E8E8E8">scorecard</text>
+  <text x="700" y="516" font-size="9" fill="#E8E8E8">→ one-way flow    ⇄ read / write</text>
+
+  <!-- ============ constants / footer ============ -->
+  <line x1="24" y1="532" x2="976" y2="532" stroke="#6E6E6E" stroke-width="1"/>
+  <text x="24" y="552" font-size="11" fill="#E8E8E8">GRID 40x40   TILE 16   TICK 500 ms   WINDOW 920x680   MAP ORIGIN (0,40)</text>
+  <text x="24" y="572" font-size="10" fill="#DCC828">tick 500 ms when not paused · 60 fps render loop · 1px #141414 outline · flat contract palette</text>
+  <text x="976" y="572" font-size="10" fill="#6E6E6E" text-anchor="end">B6</text>
+</svg>
