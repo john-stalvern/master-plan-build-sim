@@ -1,6 +1,6 @@
-masterplanner
 *.o
-tests/test_world
-tests/test_sim
+masterplanner
 plan.bin
-test_plan_tmp.bin
+demo.bin
+tests/test_sim
+*.tmp
