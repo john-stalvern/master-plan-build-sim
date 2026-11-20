@@ -169,6 +169,17 @@ int main(int argc, char **argv)
                     if (e.button.x >= SIDEBAR_X) {
                         int idx = (e.button.y - PALETTE_FIRST_Y) / PALETTE_STEP_Y;
                         if (idx >= 0 && idx < PALETTE_COUNT) tool_idx = idx;
+                    } else if (SDL_GetModState() & KMOD_CTRL) {
+                        /* Addendum v1.2: Ctrl+click converts an existing park
+                         * into a pickleball court in place, at no cost.
+                         * Ctrl+click on any other tile is a no-op and never
+                         * paints the selected tool. */
+                        painting = 0;
+                        if (hover_x >= 0 && hover_y >= 0 &&
+                            world[hover_y][hover_x].type == T_PARK) {
+                            world[hover_y][hover_x].type = T_PICKLEBALL;
+                            world[hover_y][hover_x].level = 0;
+                        }
                     } else {
                         painting = 1;
                         paint_at(e.button.x, e.button.y, tool_idx);
@@ -178,7 +189,9 @@ int main(int argc, char **argv)
                 if (e.button.button == SDL_BUTTON_LEFT) painting = 0;
             } else if (e.type == SDL_MOUSEMOTION) {
                 mouse_to_tile(e.motion.x, e.motion.y, &hover_x, &hover_y);
-                if (painting) paint_at(e.motion.x, e.motion.y, tool_idx);
+                /* Ctrl held mid-drag suppresses painting: Ctrl+drag is a no-op. */
+                if (painting && !(SDL_GetModState() & KMOD_CTRL))
+                    paint_at(e.motion.x, e.motion.y, tool_idx);
             }
         }
 

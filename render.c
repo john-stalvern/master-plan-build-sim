@@ -683,18 +683,22 @@ static void draw_legend(SDL_Renderer *r, int overlay)
             draw_cell(r, ramps[i], 0, 0, 180, 10,
                       PAL_X + 40, ky + 3, 180, 10);
         }
-        /* Integration note for t_de7ea7a4: add the v1.2 hint
-         * "CTRL+click park = pickleball" to this line and to the three-line
-         * fallback below when that card lands the ctrl-click input. */
-        draw_text(r, PAL_X, 668, "SPACE PAUSE S/L SAVE Q QUIT", 175, 185, 205, 1);
+        /* Keep the key help in the gap above the four-row legend; the v1.2
+         * pickleball hint owns the bottom line in every fallback mode.
+         * y=664 is the first free row after the legend's last cell (648..663)
+         * and leaves the 15px TTF glyph box inside the 680px window. */
+        draw_text(r, PAL_X, 585, "SPACE PAUSE S/L SAVE Q QUIT", 175, 185, 205, 1);
+        draw_text(r, PAL_X, 664, "CTRL+click park = pickleball", 175, 185, 205, 1);
     } else if (asset_ready(A_LEGEND_KEYS)) {
         /* composite reference sheet when the individual PNGs are incomplete */
         draw_whole(r, A_LEGEND_KEYS, PAL_X, 600);
-        draw_text(r, PAL_X, 668, "SPACE PAUSE S/L SAVE Q QUIT", 175, 185, 205, 1);
+        draw_text(r, PAL_X, 585, "SPACE PAUSE S/L SAVE Q QUIT", 175, 185, 205, 1);
+        draw_text(r, PAL_X, 664, "CTRL+click park = pickleball", 175, 185, 205, 1);
     } else {
         draw_text(r, PAL_X, 596, "1-9,0,-: TOOLS  F1-F4: OVERLAY", 175, 185, 205, 1);
         draw_text(r, PAL_X, 612, "SPACE: PAUSE  S/L: SAVE/LOAD",   175, 185, 205, 1);
         draw_text(r, PAL_X, 628, "ESC: CLEAR OVERLAY  Q: QUIT",    175, 185, 205, 1);
+        draw_text(r, PAL_X, 660, "CTRL+click park = pickleball", 175, 185, 205, 1);
     }
 }
 
