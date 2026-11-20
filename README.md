@@ -216,3 +216,70 @@ and a save/load round-trip all verified.
   and image/text report export *(next candidates)*
 
 Research & design brief: `docs/research.md`.
+
+
+---
+
+## Agent token usage (snapshot at time of writing)
+
+Measured from each Hermes profile's local `session_model_usage` ledger
+(`state.db`). All API traffic went through Nous Portal. "Cache read" tokens are
+prompt-cache hits; they are billed at a much lower rate than fresh input.
+Costs marked `$0` are free-tier models. Snapshot is cumulative for this project
+and will drift as work continues.
+
+| Profile | Role | API calls | Input | Output | Cache read | Cache write | Reasoning | Models used |
+|---|---|---:|---:|---:|---:|---:|---:|---|
+| `default` | PM (this session) | 159 | 262,133 | 65,261 | 19,689,473 | 1,220,211 | 16,680 | qwen4-max, hy4-flash, deepseek-v4.1-flash |
+| `mp-architect` | scaffold, contract, release | 68 | 90,850 | 70,283 | 2,729,537 | 131,485 | 43,228 | qwen4-max, hy4-flash, step-3.7-flash |
+| `mp-sim` | simulation engine | 45 | 257,260 | 62,409 | 2,911,872 | 0 | 43,679 | hy4-flash |
+| `mp-gui` | rendering + input/HUD | 178 | 459,610 | 221,754 | 13,087,616 | 0 | 152,781 | hy4-flash, step-3.7-flash |
+| `mp-qa` | verification | 112 | 513,255 | 153,210 | 8,246,272 | 0 | 95,435 | hy4-flash, step-3.7-flash |
+| `mp-design` | urban design content | 69 | 25,512 | 146,474 | 2,695,814 | 233,787 | 107,930 | qwen4-max, hy4-flash |
+| `mp-art` | tile artist (SVG → atlas) | 350 | 1,017,818 | 510,672 | 14,883,456 | 0 | 338,733 | hy4-flash, step-3.7-flash |
+| **TOTAL** | | **981** | **2,626,438** | **1,230,063** | **64,244,040** | **1,585,483** | **798,466** | |
+
+Estimated cost recorded in the ledgers: **$5.02 USD** (most traffic on free
+tiers; the figure is the provider's own estimate, not a bill).
+
+Per-model token totals across all profiles:
+
+| Model | Calls | Input | Output | Cache read | Reasoning |
+|---|---:|---:|---:|---:|---:|
+| `tencent/hy4-flash:free` | 715 | 2,586,426 | 953,526 | 41,963,264 | 653,907 |
+| `qwen/qwen4-max` | 247 | 7,822 | 240,165 | 21,470,761 | 143,582 |
+| `qwen/qwen4-max:free` | 9 | 61 | 3,074 | 1,620,639 | 789 |
+| `stepfun/step-3.7-flash:free` | 12 | 25,740 | 34,745 | 2,176 | 0 |
+| `deepseek/deepseek-v4.1-flash-1017` | 2 | 11,222 | 225 | 2,304 | 188 |
+
+Note: `mp-design` produced 146k output tokens on only 25k fresh input — a very
+high output/input ratio from extensive `qwen4-max` document drafting, much of
+it later consolidated by PM.
+
+---
+
+## License
+
+GNU General Public License, version 2 (GPLv2).
+
+Copyright (C) 2026 Master Planner contributors.
+
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any later
+version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
+Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+The full license text is available at
+<https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt>.
+
+Third-party component: `third_party/stb_image.h` is a vendored single-header
+image loader in the public domain / MIT-licensed by Sean Barrett, used under
+its own terms.
