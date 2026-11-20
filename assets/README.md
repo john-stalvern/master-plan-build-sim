@@ -13,6 +13,11 @@ source of truth; `tiles.png` and `preview.png` are generated from it.
 | T_POWERLINE | `#DCC828` | T_PARK | `#50DC50` |
 | T_POWERPLANT | `#E6821E` | T_SCHOOL | `#9646C8` |
 | T_POLICE | `#1E3282` | T_FIRE | `#D23228` |
+| T_PICKLEBALL | `#2E86AB` | | |
+
+`T_PICKLEBALL` is court blue `#2E86AB` with white `#FFFFFF` boundary/net and
+tiny service-box lines painted on top, plus the standard 1px `#141414` edge
+outline on all four sides.
 
 Development levels use the game's own `base + 16*level` brightness rule
 (saturated at 255):
@@ -30,9 +35,10 @@ outline is per-tile, two adjacent rendered tiles show a 2px dark seam.
 
 ## Atlas layout
 
-`tiles.png` is **112x48** px: 21 cells of 16x16 in a **7-column x 3-row** grid,
-row-major, zero gaps, fully opaque. Cell `(x, y)` is the top-left pixel in the
-atlas. The index is the sprite's position in row-major order.
+`tiles.png` is **112x64** px: 22 cells of 16x16 in a **7-column x 4-row** grid,
+row-major, zero gaps. Cells 0..21 are fully opaque. Cell `(x, y)` is the
+top-left pixel in the atlas. The index is the sprite's position in row-major
+order.
 
 | # | Sprite | x | y | # | Sprite | x | y |
 |---:|---|---:|---:|---:|---|---:|---:|
@@ -47,8 +53,13 @@ atlas. The index is the sprite's position in row-major order.
 | 8 | T_PARK | 16 | 16 | 19 | T_IND_L2 | 80 | 32 |
 | 9 | T_SCHOOL | 32 | 16 | 20 | T_IND_L3 | 96 | 32 |
 | 10 | T_POLICE | 48 | 16 | | | | |
+| | | | | 21 | T_PICKLEBALL | 0 | 48 |
 
 Formula: `i` from the table, `x = (i % 7) * 16`, `y = (i // 7) * 16`.
+
+Cells 22..27 are transparent padding: `montage` fills a full 7x4 canvas, and
+the renderer reads only cells 0..21. The original 21 cells are regenerated
+byte-identically from their unchanged SVGs.
 
 ### Sprite selection for the renderer
 
@@ -58,8 +69,10 @@ Formula: `i` from the table, `x = (i % 7) * 16`, `y = (i // 7) * 16`.
 - `T_RES`, `T_COM`, `T_IND`: `level == 0` uses the base sprite
   (`T_RES`/`T_COM`/`T_IND`, drawn as a surveyed empty lot); `level 1..3` uses
   `T_<TYPE>_L1` / `_L2` / `_L3`.
+- `T_PICKLEBALL` uses cell 21 and is present only in the 22-cell atlas; with
+  the 21-cell atlas it falls back to the flat court rectangle.
 
-`preview.png` is **448x192**: `tiles.png` upscaled 4x with a nearest-neighbour
+`preview.png` is **448x256**: `tiles.png` upscaled 4x with a nearest-neighbour
 (point) filter, for human inspection without changing the source pixels.
 
 ## Rebuild and verify
@@ -68,14 +81,17 @@ Formula: `i` from the table, `x = (i % 7) * 16`, `y = (i // 7) * 16`.
 cd assets
 python3 verify_svgs.py   # XML, 16x16, exact base fill, integer rects, dark border
 python3 build_atlas.py   # rsvg-convert each SVG, montage to tiles.png, 4x preview
+# 22nd sprite: assets/svg/tile_pickleball.svg (NOT T_PICKLEBALL.svg)
 ```
 
-Verification performed: 21/21 SVGs pass the style checks and rasterise to
-16x16; atlas is 112x48 and preview 448x192; every one of the 21 atlas cells has
-more than one colour; the pixel at each cell's `(1,1)` equals the exact palette
-hex listed above (0 mismatches).
+Verification: after rebuilding, run both commands and confirm that all 22 SVGs
+(22/22), including `assets/svg/tile_pickleball.svg`, pass the style checks and
+rasterise to 16x16; that the atlas is 112x64 and the preview 448x256; and that
+every used cell (0..21) contains more than one colour and its `(1,1)` pixel
+matches the palette hex above. Exact counts will be finalised after the build.
 
-Source SVGs live in `assets/svg/` and are named exactly as in the table.
+Source SVGs live in `assets/svg/` and are named exactly as in the table, except
+`T_PICKLEBALL`, whose source is `tile_pickleball.svg`.
 Generated files: `tiles.png`, `preview.png`.
 
 ## Batch A UI assets (manifest A1-A6)
@@ -192,7 +208,7 @@ python3 assets/build_legends.py   # A3+A4 ramps/glyphs/tags/heat + JSON
 python3 assets/build_cursors.py   # A5 markers + atlas + JSON
 python3 assets/build_hud.py       # A6 HUD + JSON
 python3 assets/verify_ui.py       # 387 independent pixel/layout assertions
-python3 assets/build_atlas.py     # base 21-tile atlas (unchanged)
+python3 assets/build_atlas.py     # 22-cell atlas (pickleball extension)
 python3 assets/verify_svgs.py     # base tile style checks
 ```
 
@@ -305,6 +321,6 @@ python3 assets/build_batch_b.py --check  # XML, palette, census, labels, pixel+b
 Verification performed: 37/37 batch-B SVGs parse and use only contract palette
 hexes; 5/5 pattern censuses match `docs/patterns.md` exactly (169/120/99/88/90
 tiles); 13/13 diagram labels present; all eight PNGs have the documented
-dimensions and regenerate byte-identically from their SVGs. The base 21-cell
-`tiles.png` and `build_atlas.py` are untouched; the pickleball extension is a
-separate follow-up card.
+dimensions and regenerate byte-identically from their SVGs. `tiles.png` and
+`build_atlas.py` have since been extended from 21 to 22 cells by the pickleball
+card (cell 21, `assets/svg/tile_pickleball.svg`); that follow-up is now done.
