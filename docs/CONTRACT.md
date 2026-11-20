@@ -96,3 +96,40 @@ small inner rect per level. Palette buttons show colour swatch + label.
 Every code card: `make` clean (no warnings), `make test` green (where tests
 exist), `./masterplanner --smoke` exits 0, git commit with own files only,
 kanban_complete summary lists changed files + verification output.
+
+## Addendum v1.2 — Pickleball court (PM-approved)
+
+Extends the frozen v1 contract; everything not restated here is unchanged.
+
+1. **world.h (append-only enum change).** `T_PICKLEBALL` is added immediately
+   BEFORE `T_COUNT` in `TileType`; all existing enum values are unchanged:
+   ```c
+   typedef enum { T_EMPTY, T_WATER, T_ROAD, T_POWERLINE, T_POWERPLANT,
+                  T_RES, T_COM, T_IND, T_PARK, T_SCHOOL, T_POLICE, T_FIRE,
+                  T_PICKLEBALL, T_COUNT } TileType;   /* T_PICKLEBALL = 12, T_COUNT = 13 */
+   ```
+   No other world.h change; no conversion helper is added — the in-place
+   conversion is a direct tile-type assignment consistent with the world API.
+2. **Interaction.** Ctrl+left-click on an existing `T_PARK` tile converts it
+   to `T_PICKLEBALL` in place, at no cost. Ctrl+click on any other tile is a
+   no-op. Plain park placement is unchanged. Pickleball is NOT a palette tool.
+   Input handling lives in main.c (mp-gui).
+3. **Simulation.** `T_PICKLEBALL` is recreational open space: it counts as
+   green/open space exactly like `T_PARK` in ALL scorecard metrics (green
+   coverage and the park term of walkability; docs/scorecard.md §1, §2.1,
+   §2.2 read `T_PARK` as park-equivalent = `T_PARK` or `T_PICKLEBALL`), raises
+   neighbour landValue like a park (+6 adjacency), is not a pollution or crime
+   source, never develops (level stays 0), and needs no power or road. sim.c
+   treats it as park-equivalent everywhere `T_PARK` is handled.
+4. **Rendering (mp-gui).** Flat court colour `#2E86AB` (court blue) with white
+   boundary lines + centre net line; sprite variant in atlas cell index 21
+   (atlas grows 21 -> 22 cells; assets/README.md atlas layout doc updated by
+   mp-gui). Sidebar help hint: "CTRL+click park = pickleball".
+5. **Persistence.** world_save/load format magic stays `"MPv1"`; the grid is
+   raw bytes, so the new enum value round-trips unchanged (world_load's
+   `type >= T_COUNT` validation accepts it). No world.c change.
+
+Feature ownership: mp-architect owns the world.h enum addition, sim.c
+treatment, tests (tests/test_sim.c additions) and this addendum; mp-gui owns
+main.c input, render.c and the atlas/layout doc update. Neither edits the
+other's files.

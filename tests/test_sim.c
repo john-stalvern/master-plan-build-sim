@@ -264,6 +264,168 @@ int main(void)
         assert(sc.yield > 0 && sc.walkability > 0);
     }
 
-    puts("test_sim: OK (fresh/ranges/anchors/zones/growth/park/pollution/empty/save-load/integrated)");
+    /* ---- CONTRACT addendum v1.2: pickleball courts ---- */
+
+    /* 11. Enum is append-only; ctrl-conversion semantics via the world API:
+     * place a park, convert in place by direct type assignment (as the GUI
+     * does), no cost/level change; world_place never overwrites an occupied
+     * tile; plain park placement is unchanged. (The ctrl+click input guard
+     * itself lives in main.c, owned by mp-gui.) */
+    {
+        assert(T_PICKLEBALL == 12 && T_COUNT == 13);
+        assert(T_FIRE == 11);              /* existing values unchanged */
+        control();
+        assert(world_place(10, 10, T_PARK) == 0);
+        assert(world[10][10].type == T_PARK && world[10][10].level == 0);
+        world[10][10].type = T_PICKLEBALL; /* ctrl+click park -> court */
+        assert(world[10][10].type == T_PICKLEBALL);
+        assert(world[10][10].level == 0);  /* in-place, no development */
+        assert(world_trees[10][10] == 0);
+        /* ctrl+click on a non-park tile is a no-op: the court stays a court */
+        assert(world_place(10, 10, T_PICKLEBALL) == -1);
+        assert(world[10][10].type == T_PICKLEBALL);
+        assert(world_place(10, 10, T_RES) == -1);
+        /* plain park placement unchanged */
+        assert(world_place(12, 10, T_PARK) == 0);
+        assert(world[10][12].type == T_PARK);
+        /* courts bulldoze like any tile */
+        world_bulldoze(10, 10);
+        assert(world[10][10].type == T_EMPTY);
+    }
+
+    /* 12. Green metric: courts count exactly like parks (40 tiles = 2%). */
+    {
+        control();
+        for (int i = 0; i < 20; i++) {
+            assert(world_place(i, 2, T_PARK) == 0);
+            assert(world_place(i, 3, T_PARK) == 0);
+        }
+        sim_tick();
+        int green_park = sim_scorecard().green;
+        assert(green_park == clamp100((100 * 40) / (GRID_W * GRID_H)));
+
+        control();
+        for (int i = 0; i < 20; i++) {
+            assert(world_place(i, 2, T_PARK) == 0);
+            assert(world_place(i, 3, T_PARK) == 0);
+            world[2][i].type = T_PICKLEBALL;
+            world[3][i].type = T_PICKLEBALL;
+        }
+        sim_tick();
+        assert(sim_scorecard().green == green_park);
+    }
+
+    /* 13. Park vs court: identical treatment in ALL metrics and per-tile
+     * fields. Same serviced plan, parks converted to courts -> scorecard,
+     * landValue (+6 adjacency), pollution and crime bit-identical. */
+    {
+        build_growth_plan();
+        assert(world_place(5, 4, T_COM) == 0);
+        assert(world_place(7, 6, T_IND) == 0);
+        assert(world_place(4, 4, T_PARK) == 0);
+        assert(world_place(6, 4, T_SCHOOL) == 0);
+        assert(world_place(4, 6, T_PARK) == 0);
+        for (int i = 0; i < 20; i++)
+            sim_tick();
+        Scorecard sc_park = sim_scorecard();
+        Tile snap[GRID_H][GRID_W];
+        memcpy(snap, world, sizeof snap);
+        assert(sc_park.walkability == 100); /* COM serves the home */
+
+        build_growth_plan();
+        assert(world_place(5, 4, T_COM) == 0);
+        assert(world_place(7, 6, T_IND) == 0);
+        assert(world_place(4, 4, T_PARK) == 0);
+        assert(world_place(6, 4, T_SCHOOL) == 0);
+        assert(world_place(4, 6, T_PARK) == 0);
+        world[4][4].type = T_PICKLEBALL;   /* (x,y)=(4,4) */
+        world[6][4].type = T_PICKLEBALL;   /* (x,y)=(4,6) */
+        for (int i = 0; i < 20; i++)
+            sim_tick();
+        Scorecard sc_court = sim_scorecard();
+        assert(sc_court.walkability == sc_park.walkability);
+        assert(sc_court.green       == sc_park.green);
+        assert(sc_court.amenities   == sc_park.amenities);
+        assert(sc_court.yield       == sc_park.yield);
+        assert(sc_court.livability  == sc_park.livability);
+        assert(sc_court.population  == sc_park.population);
+        assert(sc_court.jobs        == sc_park.jobs);
+        for (int y = 0; y < GRID_H; y++)
+            for (int x = 0; x < GRID_W; x++) {
+                assert(world[y][x].landValue == snap[y][x].landValue);
+                assert(world[y][x].pollution == snap[y][x].pollution);
+                assert(world[y][x].crime     == snap[y][x].crime);
+                assert(world[y][x].level     == snap[y][x].level);
+                assert(world[y][x].powered   == snap[y][x].powered);
+            }
+    }
+
+    /* 14. Walkability radius: a court at cheb 4 serves a home like a park;
+     * at cheb 5 it does not (mirrors the COM anchors in test 3). */
+    {
+        build_home();
+        assert(world_place(10, 14, T_PARK) == 0);
+        world[14][10].type = T_PICKLEBALL; /* (x,y)=(10,14), cheb 4 */
+        sim_tick();
+        assert(world[10][10].level >= 1);
+        assert(sim_scorecard().walkability == 100);
+
+        build_home();
+        assert(world_place(10, 15, T_PARK) == 0);
+        world[15][10].type = T_PICKLEBALL; /* cheb 5 */
+        sim_tick();
+        assert(sim_scorecard().walkability == 0);
+    }
+
+    /* 15. Courts never develop and need no power/road: a court sitting on a
+     * fully serviced, high-value spot (road + live powerline adjacent, the
+     * exact conditions that grow the neighbouring RES) stays level 0. */
+    {
+        build_growth_plan();
+        assert(world_place(5, 4, T_POWERLINE) == 0); /* live chain frontage */
+        assert(world_place(4, 5, T_PARK) == 0);
+        world[5][4].type = T_PICKLEBALL;   /* (x,y)=(4,5): road+power adj */
+        assert(world_place(3, 5, T_PICKLEBALL) == 0); /* direct placement */
+        for (int i = 0; i < 60; i++) {
+            sim_tick();
+            assert(world[5][4].type == T_PICKLEBALL && world[5][4].level == 0);
+            assert(world[5][3].type == T_PICKLEBALL && world[5][3].level == 0);
+        }
+        assert(world[5][4].powered == 0);  /* not a conductor, not a zone */
+        assert(world[5][5].level >= 2);    /* the serviced RES next door grew */
+    }
+
+    /* 16. save/load round-trip preserves T_PICKLEBALL; magic stays MPv1. */
+    {
+        control();
+        assert(world_place(6, 6, T_PARK) == 0);
+        world[6][6].type = T_PICKLEBALL;   /* converted court */
+        assert(world_place(7, 6, T_PICKLEBALL) == 0); /* placed court */
+        assert(world_place(8, 6, T_RES) == 0);
+        world[6][8].level = 2;
+        sim_tick();                        /* populate derived fields */
+        Tile snap[GRID_H][GRID_W];
+        uint8_t tsnap[GRID_H][GRID_W];
+        memcpy(snap, world, sizeof snap);
+        memcpy(tsnap, world_trees, sizeof tsnap);
+
+        const char *path = "test_pickleball_tmp.bin";
+        assert(world_save(path) == 0);
+        FILE *f = fopen(path, "rb");
+        assert(f != NULL);
+        char magic[4];
+        assert(fread(magic, 1, 4, f) == 4);
+        assert(memcmp(magic, "MPv1", 4) == 0);
+        fclose(f);
+        clear_grid();
+        assert(world_load(path) == 0);
+        assert(memcmp(snap, world, sizeof snap) == 0);
+        assert(memcmp(tsnap, world_trees, sizeof tsnap) == 0);
+        assert(world[6][6].type == T_PICKLEBALL);
+        assert(world[6][7].type == T_PICKLEBALL);
+        remove(path);
+    }
+
+    puts("test_sim: OK (fresh/ranges/anchors/zones/growth/park/pollution/empty/save-load/integrated/pickleball)");
     return 0;
 }

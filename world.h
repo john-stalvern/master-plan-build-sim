@@ -12,6 +12,7 @@
 
 typedef enum { T_EMPTY, T_WATER, T_ROAD, T_POWERLINE, T_POWERPLANT,
                T_RES, T_COM, T_IND, T_PARK, T_SCHOOL, T_POLICE, T_FIRE,
+               T_PICKLEBALL, /* addendum v1.2: park-equivalent court, append-only */
                T_COUNT } TileType;
 
 typedef struct { uint8_t type, level, powered, landValue, pollution, crime; } Tile;

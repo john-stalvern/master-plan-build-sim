@@ -49,6 +49,14 @@ static int is_zone(int t)
     return t == T_RES || t == T_COM || t == T_IND;
 }
 
+/* CONTRACT addendum v1.2: pickleball courts are recreational open space —
+ * park-equivalent in every metric, no pollution/crime source, never develop
+ * (not a zone), need no power or road. */
+static int is_park(int t)
+{
+    return t == T_PARK || t == T_PICKLEBALL;
+}
+
 /* ---------- 1. power flood-fill ---------- */
 
 /* Conductors are power plants, power lines and zone tiles. A plant is the
@@ -178,7 +186,7 @@ static void compute_crime(void)
 /* ---------- 4. land value ---------- */
 
 /* Base value, a downtown bonus fading from the map centre, green adjacency
- * (parks/water/trees), minus half the pollution and half the crime. */
+ * (parks/courts/water/trees), minus half the pollution and half the crime. */
 static void compute_landvalue(void)
 {
     const int cx = GRID_W / 2, cy = GRID_H / 2;
@@ -195,7 +203,7 @@ static void compute_landvalue(void)
                     int ax = x + dx, ay = y + dy;
                     if (ax < 0 || ax >= GRID_W || ay < 0 || ay >= GRID_H) continue;
                     int t = world[ay][ax].type;
-                    if (t == T_PARK) green += 6;
+                    if (is_park(t)) green += 6;
                     else if (t == T_WATER) green += 4;
                     else if (t == T_EMPTY && world_trees[ay][ax]) green += 3;
                 }
@@ -258,6 +266,19 @@ static int near_type(int x, int y, int r, int type)
     return 0;
 }
 
+/* Park-equivalent radius scan (addendum v1.2): parks AND pickleball courts. */
+static int near_park(int x, int y, int r)
+{
+    for (int yy = y - r; yy <= y + r; yy++) {
+        if (yy < 0 || yy >= GRID_H) continue;
+        for (int xx = x - r; xx <= x + r; xx++) {
+            if (xx < 0 || xx >= GRID_W) continue;
+            if (is_park(world[yy][xx].type)) return 1;
+        }
+    }
+    return 0;
+}
+
 static void compute_scorecard(void)
 {
     int n = 0, w = 0, a = 0;       /* developed residents, walkers, amenity-served */
@@ -267,7 +288,7 @@ static void compute_scorecard(void)
     for (int y = 0; y < GRID_H; y++) {
         for (int x = 0; x < GRID_W; x++) {
             Tile *t = &world[y][x];
-            if (t->type == T_PARK || t->type == T_WATER ||
+            if (is_park(t->type) || t->type == T_WATER ||
                 (t->type == T_EMPTY && world_trees[y][x]))
                 G++;
             if (is_zone(t->type)) {
@@ -278,7 +299,7 @@ static void compute_scorecard(void)
                 n++;
                 poll_sum += t->pollution;
                 if (near_type(x, y, 4, T_COM) ||
-                    near_type(x, y, 4, T_PARK) ||
+                    near_park(x, y, 4) ||
                     near_type(x, y, 4, T_SCHOOL))
                     w++;
                 if (near_type(x, y, 5, T_SCHOOL) &&
