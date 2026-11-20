@@ -37,3 +37,18 @@ assets/svg/, PNG via rsvg-convert. Gradients ONLY in legend ramps.
 - Every batch: assets/README.md updated with exact atlas layouts (name→x,y),
   all PNGs regenerated deterministically from SVG via rsvg-convert.
 - Integration cards are created by PM when each art card completes.
+
+## Delivery status (mp-art, 2026-11-20)
+
+- A1-A6: **DELIVERED** (card t_b077b1b9, merged to main). See
+  `assets/README.md` for every atlas layout and `assets/layout_*.json` for
+  machine-readable cell coordinates. Files: `assets/tools.png`, `metrics.png`,
+  `legend_landvalue.png`, `legend_pollution.png`, `legend_power.png`,
+  `legend_crime.png`, `legend_glyphs.png`, `legend_tags.png`,
+  `legend_keys.png`, `heat.png`, `cursors.png`, the four `cursor_*.png`
+  singles, `hud_topbar.png`, their 53 SVG sources and four `build_*.py`
+  builders. `assets/verify_ui.py` ran 387 pixel/layout assertions, all pass.
+- A4 note: all heat-cell pixels use alpha 153 (60%); rsvg's premultiplied
+  alpha can shift an occasional rasterised channel by 1 LSB, while the SVG
+  source hexes are exact.
+- B1-B8: pending / separate batch; not touched by this card.
