@@ -9,15 +9,6 @@
 
 /* ---------- helpers ---------- */
 
-/* Chebyshev distance (authoritative metric distance in docs/scorecard.md §1). */
-static int cheb(int ax, int ay, int bx, int by)
-{
-    int dx = ax - bx, dy = ay - by;
-    if (dx < 0) dx = -dx;
-    if (dy < 0) dy = -dy;
-    return dx > dy ? dx : dy;
-}
-
 static int clamp100(int v)
 {
     return v < 0 ? 0 : (v > 100 ? 100 : v);
@@ -229,9 +220,9 @@ int main(void)
         assert(world_place(5, 5, T_RES) == 0);
         assert(world_place(5, 4, T_COM) == 0);
         assert(world_place(6, 4, T_IND) == 0);
-        world[5][5].level = 3;
-        world[5][4].level = 2;
-        world[6][4].level = 2;
+        world[5][5].level = 3;   /* (x,y)=(5,5) -> world[y][x] */
+        world[4][5].level = 2;   /* COM placed at (5,4) */
+        world[4][6].level = 2;   /* IND placed at (6,4) */
 
         Tile snap[GRID_H][GRID_W];
         uint8_t tsnap[GRID_H][GRID_W];
@@ -251,6 +242,28 @@ int main(void)
         remove(path);
     }
 
-    puts("test_sim: OK (fresh/ranges/anchors/zones/growth/park/pollution/empty/save-load)");
+    /* 10. Integrated serviced plan develops homes AND jobs (non-stub signal). */
+    {
+        control();
+        for (int x = 2; x <= 12; x++) {
+            assert(world_place(x, 20, T_ROAD) == 0);
+            assert(world_place(x, 16, T_POWERLINE) == 0);
+        }
+        assert(world_place(1, 16, T_POWERPLANT) == 0);
+        for (int x = 4; x <= 6; x++)
+            for (int y = 17; y <= 19; y++)
+                assert(world_place(x, y, T_RES) == 0);
+        for (int x = 8; x <= 10; x++)
+            for (int y = 17; y <= 19; y++)
+                assert(world_place(x, y, T_COM) == 0);
+        for (int i = 0; i < 40; i++)
+            sim_tick();
+        Scorecard sc = sim_scorecard();
+        check_ranges(sc);
+        assert(world_population() > 0 && world_jobs() > 0);
+        assert(sc.yield > 0 && sc.walkability > 0);
+    }
+
+    puts("test_sim: OK (fresh/ranges/anchors/zones/growth/park/pollution/empty/save-load/integrated)");
     return 0;
 }
