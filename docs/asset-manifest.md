@@ -51,4 +51,14 @@ assets/svg/, PNG via rsvg-convert. Gradients ONLY in legend ramps.
 - A4 note: all heat-cell pixels use alpha 153 (60%); rsvg's premultiplied
   alpha can shift an occasional rasterised channel by 1 LSB, while the SVG
   source hexes are exact.
-- B1-B8: pending / separate batch; not touched by this card.
+- B1-B8: **DELIVERED** (card t_7a59442e, merged to main). SVGs in
+  `assets/svg/`, eight generated PNGs in `assets/`, layouts in
+  `assets/README.md`, deterministic rebuild + check in
+  `assets/build_batch_b.py`. B1 power badges 16x8; B2 pips 21x7; B3 HUD icons
+  64x16; B4 pattern thumbnails 480x96 (5x96x96); B5 app icon 32+64; B6 diagram
+  1000x600 SVG; B7 hero 1280x400 SVG+PNG; B8 keycaps 240x12 (20x12x12).
+- Base `tiles.png` (21 cells) untouched by batch B; the 22nd (pickleball) tile
+  belongs to follow-up card t_2fe9672c, not to this card.
+- Batch B verification: `python3 assets/build_batch_b.py --check` passes
+  (37 SVGs, 5/5 stamp censuses, 13/13 diagram labels, 8/8 PNGs byte-identical
+  to a fresh SVG rebuild).

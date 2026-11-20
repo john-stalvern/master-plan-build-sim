@@ -200,3 +200,111 @@ All builders are deterministic (re-running leaves every committed asset
 byte-identical). `verify_ui.py` checks raw RGBA pixels: dimensions, cell
 placement, exact swatch/accent/ramp hexes, 153/255 heat alpha, transparent
 cursor interiors, individual-vs-atlas equality and flat HUD safe zones.
+
+## Batch B UI assets (manifest B1-B8)
+
+Same flat first-SimCity rules as batch A. The five PNG strips/atlases below are
+all generated deterministically from their SVG sources by
+`python3 assets/build_batch_b.py`; each cell is row-major with zero gaps.
+
+### B1 — power badges: `power_badges.png` 16x8
+
+Two 8x8 cells on `#141414`: cell `i` at `x = i*8`.
+
+| i | Meaning | SVG | Bolt |
+|---:|---|---|---|
+| 0 | powered | `B1_POWERED.svg` | `#DCC828` |
+| 1 | unpowered | `B1_UNPOWERED.svg` | `#6E6E6E` |
+
+### B2 — development pips: `level_pips.png` 21x7
+
+Three 7x7 cells at `x = i*7`: `B2_PIP_1.svg` (one `#F0F0D2` pip),
+`B2_PIP_2.svg` (two), `B2_PIP_3.svg` (three), each on a `#141414` field with a
+1px dark outline. Renderer mapping: `tile.level` 0 = no pips, 1/2/3 = cells
+0/1/2.
+
+### B3 — HUD status icons: `hud_status.png` 64x16
+
+Four 16x16 cells at `x = i*16`, one contract accent each:
+
+| i | Icon | SVG | Accent |
+|---:|---|---|---|
+| 0 | day / sun | `B3_DAY.svg` | `#DCC828` |
+| 1 | population | `B3_POPULATION.svg` | `#3CA03C` |
+| 2 | jobs | `B3_JOBS.svg` | `#3C64DC` |
+| 3 | pause / play | `B3_PAUSE_PLAY.svg` | `#E8E8E8` / `#50DC50` |
+
+### B4 — pattern stamps: `pattern_thumbnails.png` 480x96
+
+Five 96x96 cells at `x = i*96`. Each SVG draws the **exact** tile rows from
+`docs/patterns.md`; tile colours are the base atlas palette with a 1px
+`#141414` seam. Transparent SVG margins are flattened onto `#141414`, and the
+caption strip is `#E8E8E8` text. Cell size is chosen per stamp to fit its
+bounding box.
+
+| i | Stamp | SVG | Tile px | Tiles | Anchor |
+|---:|---|---|---:|---:|---|
+| 0 | village-centre | `PATTERN_VILLAGE_CENTRE.svg` | 6 | 169 | (2,2) |
+| 1 | green-spine | `PATTERN_GREEN_SPINE.svg` | 6 | 120 | (2,17) |
+| 2 | transit-node | `PATTERN_TRANSIT_NODE.svg` | 8 | 99 | (13,27) |
+| 3 | school-cluster | `PATTERN_SCHOOL_CLUSTER.svg` | 7 | 88 | (31,2) |
+| 4 | garden-works | `PATTERN_GARDEN_WORKS.svg` | 7 | 90 | (31,14) |
+
+The two `.` cells of school-cluster are intentionally left blank (88 placed).
+
+### B5 — app / window icon
+
+`APP_ICON.svg` is the 64x64 master: orange `#E6821E` power-plant glyph on
+`#184018` dark green with a 2px `#141414` frame and `#50DC50` foliage.
+Rasters: `app_icon_32.png` (32x32), `app_icon_64.png` (64x64).
+
+### B6 — architecture + tick-order diagram
+
+`ARCHITECTURE_TICK_ORDER.svg` is 1000x600 (vector only; no committed PNG).
+It shows main / sim / world / render and the tick chain
+power → pollution → crime → landValue → growth → scorecard, with labels
+`GRID 40x40`, `TILE 16`, `TICK 500 ms`.
+
+### B7 — README hero banner
+
+`HERO_BANNER.svg` (1280x400) + `hero_banner.png`: a 40x40 plan slice and a
+sidebar mock (tools, scorecard, overlay legend), contract palette only.
+Suggested embed: `![Master Planner](assets/hero_banner.png)`.
+
+### B8 — keycap badge sheet: `keycaps.png` 240x12
+
+Twenty 12x12 cells at `x = i*12`, in the exact order below (also the order of
+`assets/svg/B8_KEY_<NAME>.svg`; `-` uses `B8_KEY_MINUS.svg`). Keycaps are the
+one batch-B exception allowing `<text>`; all other fills use the contract
+palette.
+
+| i | Label | SVG name | i | Label | SVG name |
+|---:|---|---|---:|---|---|
+| 0 | 1 | `B8_KEY_1` | 10 | - | `B8_KEY_MINUS` |
+| 1 | 2 | `B8_KEY_2` | 11 | F1 | `B8_KEY_F1` |
+| 2 | 3 | `B8_KEY_3` | 12 | F2 | `B8_KEY_F2` |
+| 3 | 4 | `B8_KEY_4` | 13 | F3 | `B8_KEY_F3` |
+| 4 | 5 | `B8_KEY_5` | 14 | F4 | `B8_KEY_F4` |
+| 5 | 6 | `B8_KEY_6` | 15 | ESC | `B8_KEY_ESC` |
+| 6 | 7 | `B8_KEY_7` | 16 | SPACE | `B8_KEY_SPACE` |
+| 7 | 8 | `B8_KEY_8` | 17 | S | `B8_KEY_S` |
+| 8 | 9 | `B8_KEY_9` | 18 | L | `B8_KEY_L` |
+| 9 | 0 | `B8_KEY_0` | 19 | Q | `B8_KEY_Q` |
+
+Tool keys use `#DCC828`, F-keys `#3C64DC`, ESC `#D23228`, SPACE `#50DC50`,
+S/L/Q `#E8E8E8`; every badge has a `#141414` field and `#F0F0D2` rim.
+
+### Rebuild and verify batch B
+
+```sh
+cd /home/will/master-planner
+python3 assets/build_batch_b.py          # regenerate all eight PNGs from SVG
+python3 assets/build_batch_b.py --check  # XML, palette, census, labels, pixel+byte equality
+```
+
+Verification performed: 37/37 batch-B SVGs parse and use only contract palette
+hexes; 5/5 pattern censuses match `docs/patterns.md` exactly (169/120/99/88/90
+tiles); 13/13 diagram labels present; all eight PNGs have the documented
+dimensions and regenerate byte-identically from their SVGs. The base 21-cell
+`tiles.png` and `build_atlas.py` are untouched; the pickleball extension is a
+separate follow-up card.
