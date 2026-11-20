@@ -9,8 +9,7 @@ for spatial thinking, in the spirit of the original 1989 SimCity.
 Built in C11 + SDL2. Flat top-down tile graphics (SVG-sourced sprite atlas with
 a zero-asset fallback). One `make` to build, one binary to run.
 
-> First-pass README. The release card (T6) will extend this with demo plans,
-> screenshots, and the full architecture map.
+![Master Planner](assets/hero_banner.png)
 
 ## Requirements
 
@@ -61,6 +60,36 @@ Example smoke output:
 {"walkability":42,"green":20,"amenities":0,"yield":16,"livability":18,"population":84,"jobs":36,"day":200}
 ```
 
+`--smoke` is the QA harness: it builds a scripted plan, runs N ticks
+(`--ticks N`, default 200), prints one line of scorecard JSON to stdout and
+exits 0. It needs no display, so it works in CI and over SSH.
+
+## Demo plan
+
+A ready-made plan ships as a **generator**, not a checked-in binary — `demo.bin`
+is a local, git-ignored artifact just like `plan.bin`. Generate it, copy it to
+the path the GUI loads, and press `L` in the window:
+
+```sh
+python3 tools/make_demo.py     # writes ./demo.bin (11204 bytes, deterministic)
+cp demo.bin plan.bin           # the GUI loads and saves plan.bin
+./masterplanner                # press L to load the demo
+```
+
+The generator writes the exact `world_save()` format (`MPv1` magic + 40×40
+tile grid + tree mask), reproducing the game's deterministic river, lake and
+forest before stamping three powered residential neighbourhoods, main-street
+retail, a school cluster, a park with a **pickleball court**, police/fire cover
+and a small industrial patch. Verified with the real `world_load()` and
+simulation code: after 200 ticks it loads cleanly and scores
+`walk 68 / green 23 / amenities 34 / yield 38 / livability 40`,
+population 756, jobs 108.
+
+To paint your own demo instead: start `./masterplanner`, paint a road spine with
+`2`, border it with `3`–`5` zones plus a `0` power plant and `-` power lines, add
+a `6` park and a `7` school, then press `S` to save `plan.bin`. The `F1`–`F4`
+overlays explain the score while you build.
+
 ## Controls
 
 | Input | Action |
@@ -74,6 +103,9 @@ Example smoke output:
 | `Space` | Pause / resume simulation |
 | `S` / `L` | Save / load plan (`plan.bin`) |
 | `Q` | Quit |
+
+CTRL+click converts an existing park into a pickleball court — a recreational
+amenity that counts as green space. Plain park placement is unchanged.
 
 ## How it works
 
@@ -100,7 +132,31 @@ Pickleball courts count as recreational green space, exactly like parks.
 Definitions: `docs/scorecard.md`. Pattern stamps (village centre, green spine,
 transit node, …): `docs/patterns.md`. Full interface contract: `docs/CONTRACT.md`.
 
-## Repository layout
+## Screenshots
+
+Captured from a real SDL window (920×680) by T5 QA. The four overlays make the
+invisible model legible — toggle them with `F1`–`F4`.
+
+![Baseline plan](assets/screenshots/smoke_plan_baseline.png)
+
+| View | Capture |
+|---|---|
+| Baseline smoke plan | `assets/screenshots/smoke_plan_baseline.png` |
+| Land value (F1) | `assets/screenshots/overlay_F1_landvalue.png` |
+| Pollution (F2) | `assets/screenshots/overlay_F2_pollution.png` |
+| Power (F3) | `assets/screenshots/overlay_F3_power.png` |
+| Crime (F4) | `assets/screenshots/overlay_F4_crime.png` |
+
+## Architecture
+
+[Architecture & tick-order diagram (SVG)](assets/svg/ARCHITECTURE_TICK_ORDER.svg)
+
+`main.c` owns the 60 fps SDL loop, input and timing; `sim.c` advances one day
+every 500 ms; `render.c` draws the current state; `world.c` is the shared 40×40
+tile model (`Tile` = type, level, powered, landValue, pollution, crime). One
+tick is `power → pollution → crime → landValue → growth/decay → scorecard`;
+each stage reads and mutates the tile grid, which is why overlays can visualise
+the intermediate fields directly.
 
 ```
 main.c      window, input, timing, --smoke harness
@@ -108,6 +164,7 @@ world.c/h   tile grid, placement, save/load
 sim.c/h     simulation tick + scorecard
 render.c/h  tiles, sprites, palette, HUD, overlays
 assets/     SVG sources + PNG atlases (optional; flat fallback without them)
+tools/      deterministic demo-plan generator (make_demo.py)
 tests/      headless unit tests
 docs/       contract, research, scorecard, patterns, asset manifest
 ```
@@ -115,10 +172,47 @@ docs/       contract, research, scorecard, patterns, asset manifest
 Sprites are optional: with `assets/` present the app renders the tile atlas and
 UI icons; without it, everything falls back to flat colour rectangles.
 
+## Art pipeline
+
+SVG is the source of truth; PNGs are generated and **optional**. `render_init()`
+tries to load the atlases from `assets/`; a missing, unreadable or wrongly-sized
+PNG disables only that element, which falls back to its flat-rect/text rendering.
+The game is fully playable with no assets at all, and `--smoke` never needs them.
+All builders are deterministic — rerunning them reproduces the committed PNGs
+byte-for-byte.
+
+```sh
+cd assets
+python3 verify_svgs.py     # 22 tile SVGs: size, palette, integer rects, borders
+python3 build_atlas.py     # rsvg-convert SVGs -> tiles.png (112x64, 22 cells) + preview.png
+python3 build_icons.py     # tool + metric icon strips
+python3 build_legends.py   # overlay ramps, glyphs, tags, heat atlas
+python3 build_cursors.py   # cursor markers + atlas
+python3 build_hud.py       # top-bar HUD
+python3 build_batch_b.py   # 8 deterministic UI PNGs (--check verifies them)
+cd .. && python3 assets/verify_ui.py
+```
+
+`rsvg-convert` (librsvg) and ImageMagick are needed only to regenerate art.
+The base atlas is 22 cells in a 7×4 row-major grid; cell 21 is the pickleball
+court. Full layouts, palettes and censuses: `assets/README.md` and
+`docs/asset-manifest.md`.
+
 ## Project status
 
-Prototype under active multi-agent development (Hermes kanban board
-`master-planner`). Core loop, GUI, simulation, sprite art and the pickleball
-feature are implemented; QA and release polish are in progress.
+Feature-complete prototype: core loop, GUI, simulation, sprite art, pattern
+stamps, save/load and the pickleball feature are implemented. T5 QA passed —
+clean build (zero warnings), unit tests, headless smoke, real-window interaction
+and a save/load round-trip all verified.
+
+## Roadmap
+
+`docs/research.md` §8 sketches the phases after this prototype:
+
+- Phase 1 — walking skeleton: window, grid, roads/zones, HUD *(done)*
+- Phase 2 — feedback loop: power, land value, pollution, growth *(done)*
+- Phase 3 — planner value: scorecard, overlays, pattern stamps *(done)*
+- Phase 4 — polish: save/load and presets *(done)*; before/after comparison view
+  and image/text report export *(next candidates)*
 
 Research & design brief: `docs/research.md`.
