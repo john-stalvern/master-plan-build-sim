@@ -1,0 +1,20 @@
+{
+  "group": "markers",
+  "atlas": {
+    "file": "assets/cursors.png",
+    "size": "64x16",
+    "cells": [
+      {"name": "HOVER", "x": 0, "y": 0},
+      {"name": "VALID", "x": 16, "y": 0},
+      {"name": "INVALID", "x": 32, "y": 0},
+      {"name": "BULLDOZE", "x": 48, "y": 0}
+    ]
+  },
+  "individual": [
+    {"name": "HOVER", "file": "assets/cursor_HOVER.png"},
+    {"name": "VALID", "file": "assets/cursor_VALID.png"},
+    {"name": "INVALID", "file": "assets/cursor_INVALID.png"},
+    {"name": "BULLDOZE", "file": "assets/cursor_BULLDOZE.png"}
+  ],
+  "notes": "transparent interior; coloured 1px outline per manifest"
+}

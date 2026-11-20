@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges">
+  <!-- HOVER: plain thin corner-bracket frame, transparent interior -->
+  <rect x="0" y="0" width="5" height="1" fill="#E8E8E8"/>
+  <rect x="0" y="0" width="1" height="5" fill="#E8E8E8"/>
+  <rect x="11" y="0" width="5" height="1" fill="#E8E8E8"/>
+  <rect x="15" y="0" width="1" height="5" fill="#E8E8E8"/>
+  <rect x="0" y="15" width="5" height="1" fill="#E8E8E8"/>
+  <rect x="0" y="11" width="1" height="5" fill="#E8E8E8"/>
+  <rect x="11" y="15" width="5" height="1" fill="#E8E8E8"/>
+  <rect x="15" y="11" width="1" height="5" fill="#E8E8E8"/>
+</svg>
