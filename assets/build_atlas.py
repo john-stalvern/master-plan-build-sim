@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Build assets/tiles.png and assets/preview.png from assets/svg/.
 
-21 sprites, 16x16 each, in a 7x3 row-major grid (112x48 px).
+22 sprites, 16x16 each, in a 7x4 row-major grid (112x64 px). Cell 21 is the
+pickleball court; the six remaining cells of the last row are transparent
+montage padding (the renderer reads only cells 0..21).
 Requires rsvg-convert and ImageMagick (montage, convert, identify).
 """
 from __future__ import annotations
@@ -16,15 +18,16 @@ HERE = Path(__file__).resolve().parent
 SVG_DIR = HERE / "svg"
 ATLAS = HERE / "tiles.png"
 PREVIEW = HERE / "preview.png"
-COLS, ROWS, TILE = 7, 3, 16
+COLS, ROWS, TILE = 7, 4, 16
 
 # Fixed row-major order. Index = name -> (x, y) = ((i % 7) * 16, (i // 7) * 16).
 ORDER = [
     "T_EMPTY", "T_WATER", "T_ROAD", "T_POWERLINE", "T_POWERPLANT", "T_RES", "T_COM",
     "T_IND", "T_PARK", "T_SCHOOL", "T_POLICE", "T_FIRE", "T_RES_L1", "T_RES_L2",
     "T_RES_L3", "T_COM_L1", "T_COM_L2", "T_COM_L3", "T_IND_L1", "T_IND_L2", "T_IND_L3",
+    "tile_pickleball",
 ]
-assert len(ORDER) == COLS * ROWS
+assert len(ORDER) == 22 and len(ORDER) <= COLS * ROWS
 
 
 def run(*cmd: str) -> str:
@@ -56,7 +59,8 @@ def main() -> int:
                 raise RuntimeError(f"{name} rasterised to {dim}, expected 16x16")
             rasters.append(str(dst))
 
-        # Tile the 21 rasters into one 7x3 sheet with zero gaps.
+        # Tile the 22 rasters into one 7x4 sheet with zero gaps. The six unused
+        # cells of the final row are transparent montage padding.
         run("montage", *rasters, "-tile", f"{COLS}x{ROWS}",
             "-geometry", "16x16+0+0", "-background", "none", str(ATLAS))
 
@@ -66,10 +70,11 @@ def main() -> int:
         raise RuntimeError(f"atlas is {dim}, expected {expected}")
 
     # 4x nearest-neighbour upscale for human inspection (crisp pixel edges).
-    run("convert", str(ATLAS), "-filter", "point", "-resize", "400%", str(PREVIEW))
+    run("convert", str(ATLAS), "-filter", "point", "-resize", "400%",
+        "-strip", str(PREVIEW))
     pdim = run("identify", "-format", "%wx%h", str(PREVIEW))
-    if pdim != "448x192":
-        raise RuntimeError(f"preview is {pdim}, expected 448x192")
+    if pdim != "448x256":
+        raise RuntimeError(f"preview is {pdim}, expected 448x256")
 
     # Every cell must contain more than one colour (i.e. actually drawn).
     bad = []
@@ -84,7 +89,7 @@ def main() -> int:
 
     print(f"atlas  {ATLAS.name}: {dim}  ({len(ORDER)} cells, {COLS}x{ROWS})")
     print(f"preview {PREVIEW.name}: {pdim}  (4x nearest-neighbour)")
-    print("all 21 cells non-empty (>=2 colours each)")
+    print(f"all {len(ORDER)} cells non-empty (>=2 colours each)")
     return 0
 
 

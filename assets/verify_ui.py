@@ -89,7 +89,7 @@ def main() -> int:
         "legend_glyphs.png": (64, 16), "legend_tags.png": (64, 16),
         "legend_keys.png": (212, 64), "heat.png": (80, 64),
         "cursors.png": (64, 16), "hud_topbar.png": (920, 40),
-        "tiles.png": (112, 48), "preview.png": (448, 192),
+        "tiles.png": (112, 64), "preview.png": (448, 256),
         "cursor_HOVER.png": (16, 16), "cursor_VALID.png": (16, 16),
         "cursor_INVALID.png": (16, 16), "cursor_BULLDOZE.png": (16, 16),
     }

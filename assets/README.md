@@ -52,8 +52,7 @@ order.
 | 7 | T_IND | 0 | 16 | 18 | T_IND_L1 | 64 | 32 |
 | 8 | T_PARK | 16 | 16 | 19 | T_IND_L2 | 80 | 32 |
 | 9 | T_SCHOOL | 32 | 16 | 20 | T_IND_L3 | 96 | 32 |
-| 10 | T_POLICE | 48 | 16 | | | | |
-| | | | | 21 | T_PICKLEBALL | 0 | 48 |
+| 10 | T_POLICE | 48 | 16 | 21 | T_PICKLEBALL | 0 | 48 |
 
 Formula: `i` from the table, `x = (i % 7) * 16`, `y = (i // 7) * 16`.
 
@@ -84,11 +83,12 @@ python3 build_atlas.py   # rsvg-convert each SVG, montage to tiles.png, 4x previ
 # 22nd sprite: assets/svg/tile_pickleball.svg (NOT T_PICKLEBALL.svg)
 ```
 
-Verification: after rebuilding, run both commands and confirm that all 22 SVGs
-(22/22), including `assets/svg/tile_pickleball.svg`, pass the style checks and
-rasterise to 16x16; that the atlas is 112x64 and the preview 448x256; and that
-every used cell (0..21) contains more than one colour and its `(1,1)` pixel
-matches the palette hex above. Exact counts will be finalised after the build.
+Verification performed (t_2fe9672c): 22/22 SVGs pass the style checks and
+rasterise to 16x16; `tiles.png` is 112x64 and `preview.png` is 448x256; every
+used cell (0..21) has more than one colour and its `(1,1)` pixel matches the
+palette hex above (0 mismatches). The 21 original cells are byte-for-byte
+identical to the pre-extension atlas; cells 22..27 are fully transparent
+padding; cell 21 uses exactly three colours (`#2E86AB`, `#FFFFFF`, `#141414`).
 
 Source SVGs live in `assets/svg/` and are named exactly as in the table, except
 `T_PICKLEBALL`, whose source is `tile_pickleball.svg`.
